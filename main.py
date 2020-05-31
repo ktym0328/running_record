@@ -13,13 +13,13 @@
 # limitations under the License.
 
 # [START gae_python37_app]
-from flask import Flask, render_template,request,Response,abort
+from flask import Flask, render_template,request,Response,abort,session
 from flask_login import login_user,logout_user,login_required,UserMixin,LoginManager
 from collections import defaultdict
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
-
+from markupsafe import escape
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
@@ -27,7 +27,7 @@ app = Flask(__name__)
 
 login_manager = LoginManager()
 login_manager.init_app(app)
-app.config['SECRET_KEY'] = "Secretarly"
+app.config['SECRET_KEY'] = "IUr239_&kjasdf3498ui"
 
 class User(UserMixin):
     def __init__(self, id, name, password):
@@ -96,10 +96,13 @@ def logout():
     ''')
 
 @app.route('/')
-def hello():
-
-    message = "Hello Flisk New World"
-    return render_template('top.html', message=message)
+def index():
+    if 'username' in session:
+        usname = escape(session['username'])
+    else:
+        usname = ""
+    message = "pythonによる走行記録簿"
+    return render_template('top.html', message=message, name=usname)
 
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
