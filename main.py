@@ -20,6 +20,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from markupsafe import escape
+import pdb
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
 # called `app` in `main.py`.
@@ -69,40 +70,38 @@ def protected():
 
 # ログインパス
 @app.route('/login/', methods=["GET", "POST"])
+
 def login():
     if(request.method == "POST"):
         # ユーザーチェック
+        #print(request.form)
         if(request.form["username"] in user_check and request.form["password"] == user_check[request.form["username"]]["password"]):
             # ユーザーが存在した場合はログイン
             login_user(users.get(user_check[request.form["username"]]["id"]))
-            return Response('''
-            login success!<br />
-            <a href="/protected/">protected</a><br />
-            <a href="/logout/">logout</a>
-            ''')
+            session["username"] = request.form["username"]
+            #pdb.set_trace()
+            message = "Login Success"
+            return render_template("login.html", message=message)
         else:
-            return abort(401)
+            return render_template("login.html", message="Authorization is falied")
     else:
         return render_template("login.html")
 
 # ログアウトパス
 @app.route('/logout/')
-@login_required
 def logout():
     logout_user()
-    return Response('''
-    logout success!<br />
-    <a href="/login/">login</a>
-    ''')
+    return render_template("top.html")
 
-@app.route('/')
+@app.route('/', methods=["GET", "POST"])
 def index():
     if 'username' in session:
         usname = escape(session['username'])
+        authflag=1
     else:
         usname = ""
-    message = "pythonによる走行記録簿"
-    return render_template('top.html', message=message, name=usname)
+        authflag=0
+    return render_template('top.html', name=usname, authorized=authflag)
 
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
