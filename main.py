@@ -81,7 +81,8 @@ def login():
             session["username"] = request.form["username"]
             #pdb.set_trace()
             message = "Login Success"
-            return render_template("login.html", message=message,authorized="1")
+            authflag=1
+            return render_template("top.html", message=message, authorized=authflag ,name=session["username"])
         else:
             return render_template("login.html", message="Authorization is falied")
     else:
