@@ -65,7 +65,7 @@ def protected():
         myData = [doc.id, doc.to_dict()]
     message = "This is list page"
     """Return a friendly HTTP greeting."""
-    return render_template('list.html', message=message, dict=myData)
+    return render_template('list.html', message=message, dict=myData,authorized="1")
     #    return 'Hello World!'
 
 # ログインパス
@@ -81,7 +81,7 @@ def login():
             session["username"] = request.form["username"]
             #pdb.set_trace()
             message = "Login Success"
-            return render_template("login.html", message=message)
+            return render_template("login.html", message=message,authorized="1")
         else:
             return render_template("login.html", message="Authorization is falied")
     else:
@@ -91,6 +91,7 @@ def login():
 @app.route('/logout/')
 def logout():
     logout_user()
+    session.clear()
     return render_template("top.html")
 
 @app.route('/', methods=["GET", "POST"])
