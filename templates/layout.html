@@ -13,12 +13,15 @@
   <nav class="uk-navbar uk-margin-large-bottom">
                 <a class="uk-navbar-brand uk-hidden-small" href="{{ url_for('index')}}">RR</a>
                 <ul class="uk-navbar-nav uk-hidden-small">
-                    <li class="uk-active">
+                    <li>
                         <a href="{{ url_for('index') }}">トップページ</a>
                     </li>
                     {% if authorized == true %}
                     <li>
                         <a href="{{ url_for('protected') }}">一覧</a>
+                    </li>
+                    <li>
+                        <a href="{{ url_for('record') }}">登録</a>
                     </li>
                     <li>
                         <a href="{{ url_for('logout') }}">ログアウト</a>

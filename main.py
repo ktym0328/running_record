@@ -59,6 +59,7 @@ def protected():
 
     db = firestore.client()
     ref = db.collection(u'running_record')
+
     docs = ref.stream()
 
     for doc in docs:
@@ -105,6 +106,31 @@ def index():
         authflag=0
     return render_template('top.html', name=usname, authorized=authflag)
 
+@app.route('/record/', methods=["GET","POST"])
+@login_required
+def record():
+    if(request.method=="GET"):
+        return render_template('input.html', name=session["username"],authorized=1)
+    else:
+        running_date = request.form["running_date"]
+        running_distance = request.form["running_distance"]
+        running_time = request.form["running_time"]
+        running_memo = request.form["running_memo"]
+
+        cred = credentials.Certificate('env/python-test-273813-firebase-adminsdk-szfvp-75719f2548.json')
+        app = firebase_admin.initialize_app(cred)
+
+        db = firestore.client()
+        ref = db.collection(u'running_record')
+        dataset = {
+            'running_date': running_date,
+            'running_distance': running_distance,
+            'running_time': running_time,
+            'running_memo': running_memo
+            }
+        docs = ref.add(dataset)
+
+        return render_template('input.html')
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
     # Engine, a webserver process such as Gunicorn will serve the app. This
