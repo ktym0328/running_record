@@ -109,8 +109,9 @@ def index():
 @app.route('/record/', methods=["GET","POST"])
 @login_required
 def record():
+    authflag='1'
     if(request.method=="GET"):
-        return render_template('input.html', name=session["username"],authorized=1)
+        return render_template('input.html', name=session["username"],authorized=authflag)
     else:
         running_date = request.form["running_date"]
         running_distance = request.form["running_distance"]
@@ -130,7 +131,7 @@ def record():
             }
         docs = ref.add(dataset)
 
-        return render_template('input.html')
+        return render_template('input.html', name=session["username"],authorized=authflag)
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
     # Engine, a webserver process such as Gunicorn will serve the app. This

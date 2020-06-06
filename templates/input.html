@@ -1,9 +1,12 @@
 {% extends "layout.html" %}
 {% block body %}
-<div class="uk-container uk-container-center uk-margin-top uk-margin-large-bottom">
+<div class="uk-container uk-container-center uk-margin-top" style="width:50%">
   <div class="uk-vertical-align-center uk-container-center" style="width:30%">
+    <div class="uk-align-center uk-text-center uk-text-bold uk-text-top">
+      <p>データ登録画面</p>
+    </div
     <div class="uk-align-center uk-text-center uk-alert-danger">
-        <p>データ登録</p>
+        <p>{{ messages }}</p>
     </div>
       <form class="uk-panel uk-panel-box uk-form" method="post">
           <div class="uk-form-row">
