@@ -125,13 +125,13 @@ def record():
         ref = db.collection(u'running_record')
         dataset = {
             'running_date': running_date,
-            'running_distance': running_distance,
+            'running_distance': float(running_distance),
             'running_time': running_time,
             'running_memo': running_memo
             }
         docs = ref.add(dataset)
-
-        return render_template('input.html', name=session["username"],authorized=authflag)
+        messages = "Record successfully. Let's run next day"
+        return render_template('input.html', name=session["username"], authorized=authflag, messages=messages)
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
     # Engine, a webserver process such as Gunicorn will serve the app. This

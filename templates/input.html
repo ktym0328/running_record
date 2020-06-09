@@ -1,17 +1,22 @@
 {% extends "layout.html" %}
 {% block body %}
 <div class="uk-container uk-container-center uk-margin-top" style="width:50%">
-  <div class="uk-vertical-align-center uk-container-center" style="width:30%">
+  <div class="uk-vertical-align-center uk-container-center">
     <div class="uk-align-center uk-text-center uk-text-bold uk-text-top">
       <p>データ登録画面</p>
-    </div
+    </div>
     <div class="uk-align-center uk-text-center uk-alert-danger">
         <p>{{ messages }}</p>
     </div>
       <form class="uk-panel uk-panel-box uk-form" method="post">
           <div class="uk-form-row">
             走った日
-              <input class="uk-width-1-1 uk-form-large" type="text" placeholder="走った日" name="running_date">
+            <input class="input uk-width-1-1 uk-form-large" id="myCal" name="running_date" type="text" />
+            <script>
+            flatpickr("#myCal", {
+              dateFormat: "Y/m/d"
+            });
+            </script>
           </div>
           <div class="uk-form-row">
             走った距離
