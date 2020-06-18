@@ -20,6 +20,7 @@ import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from markupsafe import escape
+import hashlib
 import pdb
 
 # If `entrypoint` is not defined in app.yaml, App Engine will look for an app
@@ -29,12 +30,15 @@ app = Flask(__name__)
 login_manager = LoginManager()
 login_manager.init_app(app)
 app.config['SECRET_KEY'] = "IUr239_&kjasdf3498ui"
+cred = credentials.Certificate('env/python-test-273813-firebase-adminsdk-szfvp-75719f2548.json')
+db_app = firebase_admin.initialize_app(cred)
 
 class User(UserMixin):
     def __init__(self, id, name, password):
         self.id = id
         self.name = name
         self.password = password
+
 users = {
     1: User(1,"user01", "password"),
     2: User(2, "user02", "password")
@@ -54,18 +58,14 @@ def load_user(user_id):
 @app.route('/protected/')
 @login_required
 def protected():
-    cred = credentials.Certificate('env/python-test-273813-firebase-adminsdk-szfvp-75719f2548.json')
-    app = firebase_admin.initialize_app(cred)
-
     db = firestore.client()
-    ref = db.collection(u'running_record')
-
-    docs = ref.stream()
-
-    for doc in docs:
-        myData = [doc.id, doc.to_dict()]
-    message = "This is list page"
-    """Return a friendly HTTP greeting."""
+    ref = db.collection(u'running_record').stream()
+    #myData={}
+    for data in ref:
+        myData = data.to_dict()
+#        myData = data.to_dict()
+    message = "This is lisst page"
+#    pdb.set_trace()
     return render_template('list.html', message=message, dict=myData,authorized="1")
     #    return 'Hello World!'
 
@@ -104,7 +104,14 @@ def index():
     else:
         usname = ""
         authflag=0
-    return render_template('top.html', name=usname, authorized=authflag)
+    db = firestore.client()
+    ref = db.collection(u'user_data').stream()
+    myData=[]
+    for data in ref:
+        keys = data.to_dict()
+        for key in keys:
+            myData.append(keys[key])
+    return render_template('top.html', name=usname, dict=myData, authorized=authflag)
 
 @app.route('/record/', methods=["GET","POST"])
 @login_required
@@ -132,6 +139,43 @@ def record():
         docs = ref.add(dataset)
         messages = "Record successfully. Let's run next day"
         return render_template('input.html', name=session["username"], authorized=authflag, messages=messages)
+
+@app.route('/create_account/', methods=['GET','POST'])
+def create_account():
+    if(request.method == "GET"):
+        return render_template('createaccount.html')
+    else:
+        account = request.form["login_account"]
+        displayname = request.form["display_name"]
+        if(request.form["password"] != request.form["confirm_password"]):
+            messages = "パスワードが一致しません"
+            return render_template('createaccount.html', messages=messages)
+        else:
+            #ログインアカウントの重複チェック
+            #whereで同一ログイン名のデータを抽出し、辞書型変数にlogin_nameのキーが有るか（あれば重複あり）と判断
+            db = firestore.client()
+            ref = db.collection(u'user_data').where(u'login_name',u'==',account).stream()
+            myData={}
+            for data in ref:
+                myData=data.to_dict()
+            if(u'login_name' in myData):
+                return render_template('createaccount.html',messages="ログインIDが重複しています。")
+            else:
+                passwd = request.form["password"]
+                m = hashlib.sha256(passwd.encode('utf-8')).hexdigest()
+                dataset={
+                'login_name': account,
+                'display_name': request.form['display_name'],
+                'password': m
+                }
+                db.collection(u'user_data').add(dataset)
+                return render_template('login.html', messages="Please login new account.")
+#            myData=[]
+#            for data in ref:
+#                keys = data.to_dict()
+#                for key in keys:
+#                    myData.append(keys[key])
+
 if __name__ == '__main__':
     # This is used when running locally only. When deploying to Google App
     # Engine, a webserver process such as Gunicorn will serve the app. This

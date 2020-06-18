@@ -9,8 +9,11 @@
                   <p class="uk-text-large">走行記録ページです。{{name}}さん</p>
                   <p class="uk-text-middle uk-text-center">{{ message }}</p>
                   <p>
-                      <a class="uk-button uk-button-primary uk-button-large" href="#">Button</a>
-                      <a class="uk-button uk-button-large" href="#">Button</a>
+                    <ul>
+                    {% for i in dict %}
+                        <li>data = {{ i }}</li>
+                    {% endfor %}
+                    </ul>
                   </p>
               </div>
           </div>

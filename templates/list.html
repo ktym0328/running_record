@@ -5,8 +5,8 @@
   {% if error %}<p class=error><strong>Error:</strong> {{ error }}{% endif %}
     <p>{{ message }}</p>
     <ul>
-    {% for i in dict %}
-        <li>{{ i }}</li>
+    {% for i in data %}
+        <li>data = {{ i }}</li>
     {% endfor %}
     </ul>
 
