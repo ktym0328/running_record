@@ -38,21 +38,39 @@ class User(UserMixin):
         self.id = id
         self.name = name
         self.password = password
-
-users = {
-    1: User(1,"user01", "password"),
-    2: User(2, "user02", "password")
-}
-
-nested_dict = lambda: defaultdict(nested_dict)
-user_check = nested_dict()
-for i in users.values():
-    user_check[i.name]["password"] = i.password
-    user_check[i.name]["id"] = i.id
+db = firestore.client()
+ref = db.collection(u'user_data').stream()
+user_check={}
+for objid in ref:
+    user_check[objid.to_dict()["login_name"]]={u'password': objid.to_dict()["password"], u'display_name': objid.to_dict()["display_name"]}
 
 @login_manager.user_loader
-def load_user(user_id):
-    return users.get(int(user_id))
+def load_user(login_id):
+    db = firestore.client()
+    ref = db.collection(u'user_data').where(u'login_name',u'==',login_id).stream()
+    myData={}
+    for objid in ref:
+        myData[objid.to_dict()["login_name"]]={u'password': objid.to_dict()["password"], u'display_name': objid.to_dict()["display_name"]}
+
+    if(u'login_name' in myData):
+        return users.get(login_id)
+    else:
+        return None
+    #https://stackoverflow.com/questions/54992412/flask-login-usermixin-class-with-a-mongodb
+
+@app.route('/', methods=["GET", "POST"])
+def index():
+    myData=[]
+    i=0
+    if 'username' in session:
+        usname = escape(session['username'])
+        authflag=1
+    else:
+        usname = ""
+        authflag=0
+
+    return render_template('top.html', name=usname, authorized=authflag)
+
 
 # ログインしないと表示されないパス
 @app.route('/protected/')
@@ -76,15 +94,23 @@ def login():
     if(request.method == "POST"):
         # ユーザーチェック
         #print(request.form)
-        if(request.form["username"] in user_check and request.form["password"] == user_check[request.form["username"]]["password"]):
-            # ユーザーが存在した場合はログイン
-            login_user(users.get(user_check[request.form["username"]]["id"]))
-            session["username"] = request.form["username"]
-            #pdb.set_trace()
-            message = "Login Success"
-            authflag=1
-            return render_template("top.html", message=message, authorized=authflag ,name=session["username"])
+        if(request.form["username"] in user_check.keys()):
+            inputpass = hashlib.sha256(request.form["password"].encode('utf-8')).hexdigest()
+            print(inputpass)
+            print(user_check[request.form['username']]['password'])
+            if(inputpass == user_check[request.form['username']]['password']):
+                print("password is exist")
+                # ユーザーが存在した場合はログイン
+                session["username"] = request.form["username"]
+                #pdb.set_trace()
+                message = "Login Success"
+                authflag=1
+                return render_template("top.html", message=message, dict=user_check ,authorized=authflag ,name=session["username"])
+            else:
+                print(user_check)
+                return render_template("login.html", message="Authorization is falied")
         else:
+            print(user_check)
             return render_template("login.html", message="Authorization is falied")
     else:
         return render_template("login.html")
@@ -94,24 +120,7 @@ def login():
 def logout():
     logout_user()
     session.clear()
-    return render_template("top.html")
-
-@app.route('/', methods=["GET", "POST"])
-def index():
-    if 'username' in session:
-        usname = escape(session['username'])
-        authflag=1
-    else:
-        usname = ""
-        authflag=0
-    db = firestore.client()
-    ref = db.collection(u'user_data').stream()
-    myData=[]
-    for data in ref:
-        keys = data.to_dict()
-        for key in keys:
-            myData.append(keys[key])
-    return render_template('top.html', name=usname, dict=myData, authorized=authflag)
+    return render_template("top.html",dict=user_check)
 
 @app.route('/record/', methods=["GET","POST"])
 @login_required
@@ -162,11 +171,11 @@ def create_account():
                 return render_template('createaccount.html',messages="ログインIDが重複しています。")
             else:
                 passwd = request.form["password"]
-                m = hashlib.sha256(passwd.encode('utf-8')).hexdigest()
+                hashedpass = hashlib.sha256(passwd.encode('utf-8')).hexdigest()
                 dataset={
                 'login_name': account,
                 'display_name': request.form['display_name'],
-                'password': m
+                'password': hashedpass
                 }
                 db.collection(u'user_data').add(dataset)
                 return render_template('login.html', messages="Please login new account.")
